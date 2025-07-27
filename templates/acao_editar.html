@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Action {{ action.case_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-2">Edit Legal Action</h1>
+    <p class="text-gray-600 mb-6">Client: <strong class="font-semibold">{{ action.client.full_name }}</strong></p>
+
+    <form action="{{ url_for('action_edit', action_id=action.id) }}" method="POST">
+        <div class="mb-4">
+            <label for="case_number" class="block text-gray-700 font-semibold mb-2">Case Number</label>
+            <input type="text" id="case_number" name="case_number" value="{{ action.case_number }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+        </div>
+
+        <div class="mb-4">
+            <label for="action_type" class="block text-gray-700 font-semibold mb-2">Action Type</label>
+            <select id="action_type" name="action_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                <!-- The 'selected' ensures the correct option is already marked -->
+                <option value="Civil" {% if action.action_type == 'Civil' %}selected{% endif %}>Civil</option>
+                <option value="Labor" {% if action.action_type == 'Labor' %}selected{% endif %}>Labor</option>
+                <option value="Administrative Social Security" {% if action.action_type == 'Administrative Social Security' %}selected{% endif %}>Administrative Social Security</option>
+                <option value="Social Security Back Pay" {% if action.action_type == 'Social Security Back Pay' %}selected{% endif %}>Social Security "Back Pay"</option>
+                <option value="Social Security RPV/Court Order" {% if action.action_type == 'Social Security RPV/Court Order' %}selected{% endif %}>Social Security with RPV/Court Order</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="responsible_partner" class="block text-gray-700 font-semibold mb-2">Responsible Partner</label>
+            <input type="text" id="responsible_partner" name="responsible_partner" value="{{ action.responsible_partner }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+        </div>
+        
+        <div class="mb-6">
+            <label for="responsible_consultant" class="block text-gray-700 font-semibold mb-2">Consultant (Optional)</label>
+            <input type="text" id="responsible_consultant" name="responsible_consultant" value="{{ action.responsible_consultant or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="flex items-center justify-end gap-4 mt-8">
+            <a href="{{ url_for('action_detail', action_id=action.id) }}" class="text-gray-600 hover:underline">Cancel</a>
+            <button type="submit" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

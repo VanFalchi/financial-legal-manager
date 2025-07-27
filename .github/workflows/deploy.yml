@@ -1,0 +1,36 @@
+# .github/workflows/deploy.yml
+# Roteiro de CI/CD para um self-hosted runner (com correção de permissões)
+
+name: Deploy to Production VPS
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      # PASSO NOVO: Garante que o runner tem permissão sobre seu próprio diretório
+      - name: Clean and Prepare Workspace
+        run: |
+          # A variável GITHUB_WORKSPACE é o caminho para o diretório de trabalho do runner.
+          # O 'if' garante que o comando só rode se o diretório já existir de um run anterior.
+          if [ -d "${{ github.workspace }}" ]; then
+            sudo chown -R vanessa:vanessa "${{ github.workspace }}"
+          fi
+
+      # Passo 2: O runner baixa o código mais recente (agora sem erros de permissão)
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Passo 3: O runner cria o arquivo .env a partir do segredo do GitHub
+      - name: Create .env file
+        run: echo "${{ secrets.DOT_ENV }}" > .env
+
+      # Passo 4: O runner executa os comandos de deploy
+      - name: Deploy Application
+        run: |
+          docker compose -f docker-compose.prod.yml up --build -d
+          docker image prune -f

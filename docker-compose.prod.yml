@@ -1,0 +1,65 @@
+# docker-compose.prod.yml
+# Versão final com volume compartilhado para arquivos estáticos.
+
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: FinanceManager_nginx_prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /opt/FinanceManager/certs/certbot/conf:/etc/letsencrypt
+      - /opt/FinanceManager/certs/certbot/www:/var/www/certbot
+      # MUDANÇA AQUI: Dá ao Nginx acesso ao volume de arquivos estáticos
+      - static_volume:/app/static
+    depends_on:
+      - app
+
+  certbot:
+    image: certbot/certbot
+    container_name: FinanceManager_certbot_prod
+    volumes:
+      - /opt/FinanceManager/certs/certbot/conf:/etc/letsencrypt
+      - /opt/FinanceManager/certs/certbot/www:/var/www/certbot
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: FinanceManager_app_prod
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    expose:
+      - 5000
+    command: gunicorn --workers 3 --bind 0.0.0.0:5000 app:app
+    volumes:
+      # MUDANÇA AQUI: Diz à aplicação para colocar seus arquivos estáticos no volume compartilhado
+      - static_volume:/app/static
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15-alpine
+    container_name: FinanceManager_db_prod
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data_prod:
+  # MUDANÇA AQUI: Define o volume compartilhado
+  static_volume:

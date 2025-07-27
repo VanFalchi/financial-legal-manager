@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FinanceManager Management{% endblock %}</title>
+    
+    <!-- THE MAGIC LINE THAT WAS MISSING -->
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/svg+xml">
+    
+    <!-- Importing Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <nav class="bg-gray-800 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">FinanceManager App</a>
+            {% if current_user.is_authenticated %}
+            <div>
+                <a href="{{ url_for('clients') }}" class="px-3 py-2 rounded hover:bg-gray-700">Clients</a>
+                <a href="{{ url_for('logout') }}" class="px-3 py-2 rounded hover:bg-gray-700">Logout</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-8 p-4">
+        <!-- Block to display flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-lg 
+                        {% if category == 'error' %} bg-red-100 border border-red-400 text-red-700
+                        {% elif category == 'success' %} bg-green-100 border border-green-400 text-green-700
+                        {% else %} bg-blue-100 border border-blue-400 text-blue-700 {% endif %}"
+                        role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- The specific content of each page will be inserted here -->
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

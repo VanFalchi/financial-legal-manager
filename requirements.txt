@@ -1,0 +1,10 @@
+# requirements.txt
+Flask
+psycopg2-binary
+SQLAlchemy
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug
+openpyxl
+python-dateutil
+gunicorn

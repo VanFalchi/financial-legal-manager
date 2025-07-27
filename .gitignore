@@ -1,0 +1,23 @@
+# .gitignore for financial-legal-manager project
+.env
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.venv/
+venv/
+env/
+
+certbot/*
+!certbot/.gitkeep
+!certbot/conf/.gitkeep
+!certbot/www/.gitkeep
+
+.vscode/
+.idea/
+*.swp
+
+.DS_Store
+Thumbs.db

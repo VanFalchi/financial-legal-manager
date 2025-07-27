@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Action Details {{ action.case_number }}{% endblock %}
+
+{% block content %}
+<div class="bg-white p-8 rounded-lg shadow-md">
+    
+    <div class="mb-8 border-b pb-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold">{{ action.action_type }}</h1>
+                <p class="text-md text-gray-600">Case No: <strong class="font-mono">{{ action.case_number }}</strong></p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{{ url_for('action_edit', action_id=action.id) }}" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition duration-300">Edit Action</a>
+                <form action="{{ url_for('action_delete', action_id=action.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this action? All its financial transactions will be permanently deleted.');">
+                    <button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition duration-300">Delete Action</button>
+                </form>
+            </div>
+        </div>
+        <div class="mt-4 text-sm text-gray-700 grid grid-cols-2 gap-x-4">
+            <p><strong>Client:</strong> <a href="{{ url_for('client_detail', client_id=action.client.id) }}" class="text-blue-600 hover:underline">{{ action.client.full_name }}</a></p>
+            <p><strong>Partner:</strong> {{ action.responsible_partner }}</p>
+            <p><strong>Consultant:</strong> {{ action.responsible_consultant or 'None' }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        
+        <div class="lg:col-span-2">
+            <h2 class="text-2xl font-bold mb-4">Record Single Payment</h2>
+            <form action="{{ url_for('action_detail', action_id=action.id) }}" method="POST" class="border p-4 rounded-lg">
+                <div class="mb-4">
+                    <label for="value_type" class="block text-gray-700 font-semibold mb-2">Value Type</label>
+                    <select id="value_type" name="value_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                        <option value="" disabled selected>Select...</option>
+                        <option value="Provided Amount" {% if action.action_type not in ['Civil', 'Labor'] %}disabled class="text-gray-400"{% endif %}>Provided Amount</option>
+                        <option value="Remaining Amount" {% if action.action_type not in ['Civil', 'Labor'] %}disabled class="text-gray-400"{% endif %}>Remaining Amount</option>
+                        <option value="Procedural Costs" {% if action.action_type == 'Administrative Social Security' %}disabled class="text-gray-400"{% endif %}>Procedural Costs</option>
+                        <option value="RPV" {% if action.action_type != 'Social Security RPV/Court Order' %}disabled class="text-gray-400"{% endif %}>RPV (Back Pay)</option>
+                        <option value="Court Order" {% if action.action_type != 'Social Security RPV/Court Order' %}disabled class="text-gray-400"{% endif %}>Court Order (Back Pay)</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="gross_amount" class="block text-gray-700 font-semibold mb-2">Gross Amount ($)</label>
+                    <input type="number" step="0.01" id="gross_amount" name="gross_amount" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required placeholder="Ex: 15000.00">
+                </div>
+                <div class="mb-4">
+                    <label for="payment_date" class="block text-gray-700 font-semibold mb-2">Payment Date</label>
+                    <input type="date" id="payment_date" name="payment_date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="notes" class="block text-gray-700 font-semibold mb-2">Notes (Optional)</label>
+                    <textarea id="notes" name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
+                        Record Payment
+                    </button>
+                </div>
+            </form>
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('add_installments', action_id=action.id) }}" 
+                   class="w-full block font-bold py-2 px-4 rounded-lg transition duration-300
+                          {% if not action.action_type.startswith('Social Security') %}
+                              bg-gray-400 text-gray-800 cursor-not-allowed
+                          {% else %}
+                              bg-purple-600 text-white hover:bg-purple-700
+                          {% endif %}">
+                    Add Batch Installments
+                </a>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3">
+            <h2 class="text-2xl font-bold mb-4">Detailed Financial History</h2>
+            <div class="overflow-x-auto">
+                {% for transaction in action.transactions|sort(attribute='payment_date', reverse=True) %}
+                <div class="bg-gray-50 border rounded-lg p-4 mb-4">
+                    <div class="flex justify-between items-center border-b pb-2 mb-2">
+                        <div>
+                            <p class="font-bold text-lg">{{ transaction.value_type }}</p>
+                            <p class="text-sm text-gray-600">Received on: {{ transaction.payment_date.strftime('%m/%d/%Y') }}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <p class="font-bold text-lg font-mono">Total: $ {{ "%.2f"|format(transaction.gross_amount) }}</p>
+                            <!-- TRANSACTION DELETE BUTTON -->
+                            <form action="{{ url_for('transaction_delete', transaction_id=transaction.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this transaction?');">
+                                <button type="submit" class="text-red-500 hover:text-red-700" title="Delete Transaction">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
+                        <span class="text-gray-600">Client Share:</span> <span class="font-mono text-right">$ {{ "%.2f"|format(transaction.client_share or 0) }}</span>
+                        <span class="text-gray-600">Partner Share:</span> <span class="font-mono text-right">$ {{ "%.2f"|format(transaction.partner_share or 0) }}</span>
+                        <span class="text-gray-600">FinanceManager Share:</span> <span class="font-mono text-right">$ {{ "%.2f"|format(transaction.finance_manager_share or 0) }}</span>
+                        <span class="text-gray-600">Consultant Commission:</span> <span class="font-mono text-right">$ {{ "%.2f"|format(transaction.consultant_commission or 0) }}</span>
+                    </div>
+                    {% if transaction.notes %}
+                    <div class="mt-2 pt-2 border-t text-xs text-gray-500">
+                        <strong>Notes:</strong> {{ transaction.notes }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="bg-gray-50 border rounded-lg p-4 text-center text-gray-500">
+                    <p>No transactions recorded.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

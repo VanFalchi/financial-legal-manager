@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Login - FinanceManager App{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-16 bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6 text-center">Access the System</h1>
+
+    <form action="{{ url_for('login') }}" method="POST">
+        <div class="mb-4">
+            <label for="username" class="block text-gray-700 font-semibold mb-2">Username</label>
+            <input type="text" id="username" name="username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+        </div>
+        <div class="mb-6">
+            <label for="password" class="block text-gray-700 font-semibold mb-2">Password</label>
+            <input type="password" id="password" name="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+        </div>
+        <div>
+            <button type="submit" class="w-full bg-gray-800 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-900 transition duration-300">
+                Login
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: FinanceManager_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    restart: on-failure
+    # Diz ao serviço para carregar as variáveis do arquivo .env
+    env_file:
+      - .env
+    # A URL do banco agora é construída com as variáveis que vêm do .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: FinanceManager_db
+    # Diz ao serviço para carregar as variáveis do arquivo .env
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
