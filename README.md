@@ -79,3 +79,5 @@ To run this project in a local development environment, you will need Docker and
 
 5.  **Access the application:**
     The application will be available at `http://localhost:5000`.
+
+* Note: The on: trigger in the deploy.yml workflow has been commented out for this public repository. The pipeline is active and runs on the private repository for the actual client.
