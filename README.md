@@ -39,6 +39,64 @@ The core challenge was to translate a unique set of business rules into a secure
 | **Security** | Let's Encrypt (HTTPS), UFW, Tailscale  | A multi-layered security approach: SSL encryption for all traffic, a host-based firewall, and a private VPN (Tailscale) for secure administrative access.                 |
 | **CI/CD** | GitHub Actions (Self-Hosted Runner)  | To create a fully automated, secure pipeline that builds and deploys the application on every push to the main branch directly inside the production server.            |
 
+```mermaid
+graph TD
+    subgraph "User & External Services"
+        U[User's Browser]
+        G[GitHub Repository]
+    end
+
+    subgraph "Cloudflare"
+        CF[DNS, CDN & Security]
+    end
+
+    subgraph "Developer"
+        DEV[Developer's Local Machine]
+    end
+
+    subgraph "Contabo VPS (Production Server)"
+        subgraph "Security Layer"
+            FW[Firewall / UFW]
+            TS_VPN[Tailscale VPN]
+        end
+
+        subgraph "CI/CD Agent"
+            RUNNER[Self-Hosted GitHub Actions Runner]
+        end
+
+        subgraph "Docker Environment"
+            NGINX[Nginx Container]
+            APP[Flask/Gunicorn App Container]
+            DB[PostgreSQL DB Container]
+            
+            subgraph "Persistent Volumes"
+                VOL_DB[(Postgres Data)]
+                VOL_CERT[(SSL Certs)]
+                VOL_STATIC[(Static Files)]
+            end
+        end
+    end
+
+    U -- HTTPS Request --> CF
+    CF -- Proxied Traffic (Port 443) --> FW
+    FW --> NGINX
+
+    NGINX -- Serves Static Content --> VOL_STATIC
+    NGINX -- Forwards Dynamic Request --> APP
+    APP -- Reads/Writes Data --> DB
+    DB -- Persists Data --> VOL_DB
+    NGINX -- Reads SSL Certs --> VOL_CERT
+
+    DEV -- git push --> G
+    G -- Triggers Workflow --> RUNNER
+    RUNNER -- Deploys to --> NGINX
+    RUNNER -- Deploys to --> APP
+    RUNNER -- Deploys to --> DB
+
+    DEV -- Secure SSH via VPN --> TS_VPN
+    TS_VPN -- Allows Access (Port 22) --> FW
+```
+
 ---
 
 ## 3. Core Features
@@ -59,7 +117,7 @@ To run this project in a local development environment, you will need Docker and
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your-username/financial-legal-manager.git](https://github.com/your-username/financial-legal-manager.git)
+    git clone https://github.com/VanFalchi/financial-legal-manager.git
     cd financial-legal-manager
     ```
 
@@ -80,4 +138,4 @@ To run this project in a local development environment, you will need Docker and
 5.  **Access the application:**
     The application will be available at `http://localhost:5000`.
 
-* Note: The on: trigger in the deploy.yml workflow has been commented out for this public repository. The pipeline is active and runs on the private repository for the actual client.
+## Note: The on: trigger in the deploy.yml workflow has been commented out for this public repository. The pipeline is active and runs on the private repository for the actual client.
